@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Order Creation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #4F46E5;
+            padding-bottom: 10px;
+        }
+        button {
+            background: #4F46E5;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #4338CA;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success {
+            background: #D1FAE5;
+            border: 2px solid #10B981;
+            color: #065F46;
+        }
+        .error {
+            background: #FEE2E2;
+            border: 2px solid #EF4444;
+            color: #991B1B;
+        }
+        .info {
+            background: #DBEAFE;
+            border: 2px solid #3B82F6;
+            color: #1E40AF;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Order Creation Tester</h1>
+        <p>This tool tests if the order creation API is working correctly.</p>
+
+        <button onclick="testHealth()">1. Test Server Health</button>
+        <button onclick="testOrderCreation()">2. Test Order Creation</button>
+        <button onclick="clearResults()">Clear Results</button>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000/api';
+        const resultDiv = document.getElementById('result');
+
+        function clearResults() {
+            resultDiv.innerHTML = '';
+        }
+
+        async function testHealth() {
+            resultDiv.innerHTML = '<div class="result info">Testing server health...</div>';
+            
+            try {
+                const response = await fetch(`${API_URL}/health`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="result success">
+                            ✅ SERVER IS RUNNING!
+                            
+                            Status: ${data.status}
+                            Message: ${data.message}
+                            Timestamp: ${data.timestamp}
+                            
+                            Backend server is accessible and working correctly!
+                        </div>
+                    `;
+                } else {
+                    throw new Error('Server responded with error');
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        ❌ SERVER NOT ACCESSIBLE!
+                        
+                        Error: ${error.message}
+                        
+                        Solutions:
+                        1. Make sure backend server is running
+                        2. Run: cd server && npm run dev
+                        3. Check if port 5000 is available
+                        4. Verify MongoDB is connected
+                    </div>
+                `;
+            }
+        }
+
+        async function testOrderCreation() {
+            resultDiv.innerHTML = '<div class="result info">Testing order creation...</div>';
+            
+            const testOrder = {
+                customerInfo: {
+                    email: "test@example.com",
+                    phone: "9876543210",
+                    firstName: "Test",
+                    lastName: "User"
+                },
+                orderItems: [
+                    {
+                        product: "507f1f77bcf86cd799439011",
+                        name: "Test Product",
+                        image: "https://via.placeholder.com/150",
+                        price: 100,
+                        quantity: 1
+                    }
+                ],
+                shippingAddress: {
+                    address: "123 Test Street",
+                    apartment: "",
+                    city: "Test City",
+                    state: "Test State",
+                    pincode: "123456",
+                    country: "India"
+                },
+                courierService: "bluedart",
+                paymentMethod: "Online Payment",
+                itemsPrice: 100,
+                shippingPrice: 50,
+                taxPrice: 10,
+                totalPrice: 160
+            };
+            
+            try {
+                console.log("Sending order:", testOrder);
+                
+                const response = await fetch(`${API_URL}/orders/guest`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(testOrder)
+                });
+                
+                console.log("Response status:", response.status);
+                console.log("Response headers:", response.headers);
+                
+                const data = await response.json();
+                console.log("Response data:", data);
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="result success">
+                            ✅ ORDER CREATED SUCCESSFULLY!
+                            
+                            Order ID: ${data.orderId || data._id}
+                            Status: ${data.status}
+                            Payment Method: ${data.paymentMethod}
+                            Total Price: ₹${data.totalPrice}
+                            
+                            🎉 Order creation API is working correctly!
+                            
+                            Full Response:
+                            ${JSON.stringify(data, null, 2)}
+                        </div>
+                    `;
+                } else {
+                    throw new Error(data.message || 'Order creation failed');
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        ❌ ORDER CREATION FAILED!
+                        
+                        Error: ${error.message}
+                        
+                        Possible Causes:
+                        1. Backend server not running
+                        2. MongoDB not connected
+                        3. CORS issue
+                        4. Route not configured correctly
+                        
+                        Check browser console (F12) for more details.
+                        Check server terminal for error logs.
+                    </div>
+                `;
+            }
+        }
+
+        // Auto-test health on page load
+        window.onload = () => {
+            testHealth();
+        };
+    </script>
+</body>
+</html>

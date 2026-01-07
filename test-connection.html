@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Backend Connection</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        button {
+            background: #4F46E5;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #4338CA;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .success {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+        .error {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
+    </style>
+</head>
+<body>
+    <h1>Backend Connection Test</h1>
+    
+    <div class="test-section">
+        <h2>Test 1: Health Check</h2>
+        <button onclick="testHealth()">Test Health Endpoint</button>
+        <div id="health-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 2: Create Guest Order</h2>
+        <button onclick="testGuestOrder()">Test Guest Order Creation</button>
+        <div id="order-result"></div>
+    </div>
+
+    <script>
+        async function testHealth() {
+            const resultDiv = document.getElementById('health-result');
+            resultDiv.innerHTML = 'Testing...';
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/health');
+                const data = await response.json();
+                
+                resultDiv.className = 'result success';
+                resultDiv.innerHTML = `
+                    <strong>✅ Success!</strong><br>
+                    Status: ${data.status}<br>
+                    Message: ${data.message}<br>
+                    Timestamp: ${data.timestamp}
+                `;
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                    <strong>❌ Error!</strong><br>
+                    ${error.message}
+                `;
+            }
+        }
+
+        async function testGuestOrder() {
+            const resultDiv = document.getElementById('order-result');
+            resultDiv.innerHTML = 'Testing...';
+            
+            const orderData = {
+                customerInfo: {
+                    email: "test@example.com",
+                    phone: "9876543210",
+                    firstName: "Test",
+                    lastName: "User"
+                },
+                orderItems: [
+                    {
+                        id: "test-1",
+                        name: "Test Product",
+                        price: 100,
+                        quantity: 1,
+                        image: "https://via.placeholder.com/150",
+                        description: "Test product description"
+                    }
+                ],
+                shippingAddress: {
+                    address: "123 Test Street",
+                    apartment: "Apt 4B",
+                    city: "Test City",
+                    state: "Test State",
+                    pincode: "123456",
+                    country: "India"
+                },
+                courierService: "bluedart",
+                paymentMethod: "Cash on Delivery",
+                itemsPrice: 100,
+                shippingPrice: 50,
+                taxPrice: 5,
+                totalPrice: 155
+            };
+
+            try {
+                console.log('Sending order data:', orderData);
+                
+                const response = await fetch('http://localhost:5000/api/orders/guest', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(orderData)
+                });
+
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Order creation failed');
+                }
+
+                const data = await response.json();
+                console.log('Order created:', data);
+                
+                resultDiv.className = 'result success';
+                resultDiv.innerHTML = `
+                    <strong>✅ Success!</strong><br>
+                    Order ID: ${data.orderId}<br>
+                    Message: ${data.message}<br>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                    <strong>❌ Error!</strong><br>
+                    ${error.message}
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

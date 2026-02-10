@@ -13,6 +13,7 @@ const CartPage = () => {
   const [showOrderHistory, setShowOrderHistory] = useState(false);
   const [orderError, setOrderError] = useState("");
   const { showNotification } = useNotification();
+  const [previewImage, setPreviewImage] = useState(null);
 
   // Clear email and orders when component unmounts or page is closed
   useEffect(() => {
@@ -295,10 +296,15 @@ const CartPage = () => {
                   className="flex items-center gap-4 py-4 border-b last:border-b-0"
                 >
                   <img
-                    src={item.image}
+                    src={item.image || "https://placehold.co/100x100/e2e8f0/475569?text=Product"}
                     alt={item.name}
-                    className="w-24 h-24 object-cover rounded-lg"
-                    onError={(e) => (e.target.src = "https://via.placeholder.com/100")}
+                    className="w-24 h-24 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity ring-2 ring-transparent hover:ring-indigo-400"
+                    onClick={() => setPreviewImage(item)}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = "https://placehold.co/100x100/e2e8f0/475569?text=Product";
+                    }}
+                    title="Click to preview"
                   />
                   <div className="flex-1">
                     <h3 className="text-lg font-semibold text-gray-800">{item.name}</h3>
@@ -432,6 +438,57 @@ const CartPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Image Preview Modal */}
+      {previewImage && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4"
+          onClick={() => setPreviewImage(null)}
+        >
+          <div 
+            className="relative bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button */}
+            <button
+              onClick={() => setPreviewImage(null)}
+              className="absolute top-4 right-4 z-10 bg-white rounded-full p-2 shadow-lg hover:bg-gray-100 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Image */}
+            <div className="bg-gradient-to-br from-gray-100 to-gray-200 p-6">
+              <img
+                src={previewImage.image || "https://placehold.co/600x600/e2e8f0/475569?text=Product"}
+                alt={previewImage.name}
+                className="w-full h-auto max-h-[60vh] object-contain rounded-lg"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = "https://placehold.co/600x600/e2e8f0/475569?text=Product";
+                }}
+              />
+            </div>
+
+            {/* Product Details */}
+            <div className="p-6 bg-white">
+              <h3 className="text-xl font-bold text-gray-800 mb-2">{previewImage.name}</h3>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-indigo-600 font-bold text-lg">₹{previewImage.price}</p>
+                  <p className="text-gray-500 text-sm">Quantity: {previewImage.quantity}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-gray-600 text-sm">Subtotal</p>
+                  <p className="text-xl font-bold text-gray-800">₹{previewImage.price * previewImage.quantity}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

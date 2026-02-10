@@ -75,7 +75,7 @@ export default function Header() {
                   navigate('/');
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
-                className={`px-3 py-2 text-sm font-medium ${isActive('home') ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-indigo-600'}`}
+                className={`px-3 py-2 text-sm font-medium ${isActive('home') ? 'text-indigo-600' : 'text-gray-500 hover:text-indigo-600'}`}
               >
                 Home
               </a>
@@ -84,7 +84,7 @@ export default function Header() {
               <a 
                 href="#services" 
                 onClick={(e) => handleNavClick('services', e)}
-                className={`px-3 py-2 text-sm font-medium ${isActive('services') ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-indigo-600'}`}
+                className={`px-3 py-2 text-sm font-medium ${isActive('services') ? 'text-indigo-600' : 'text-gray-500 hover:text-indigo-600'}`}
               >
                 Services
               </a>
@@ -93,7 +93,7 @@ export default function Header() {
               <a 
                 href="#about" 
                 onClick={(e) => handleNavClick('about', e)}
-                className={`px-3 py-2 text-sm font-medium ${isActive('about') ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-indigo-600'}`}
+                className={`px-3 py-2 text-sm font-medium ${isActive('about') ? 'text-indigo-600' : 'text-gray-500 hover:text-indigo-600'}`}
               >
                 About
               </a>
@@ -102,7 +102,7 @@ export default function Header() {
               <a 
                 href="#contact" 
                 onClick={(e) => handleNavClick('contact', e)}
-                className={`px-3 py-2 text-sm font-medium ${isActive('contact') ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500 hover:text-indigo-600'}`}
+                className={`px-3 py-2 text-sm font-medium ${isActive('contact') ? 'text-indigo-600' : 'text-gray-500 hover:text-indigo-600'}`}
               >
                 Contact
               </a>
@@ -113,7 +113,7 @@ export default function Header() {
                 className={({ isActive }) => 
                   `px-3 py-2 text-sm font-medium relative ${
                     isActive 
-                      ? 'text-indigo-600 border-b-2 border-indigo-600' 
+                      ? 'text-indigo-600' 
                       : 'text-gray-500 hover:text-indigo-600'
                   }`
                 }

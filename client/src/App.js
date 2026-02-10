@@ -14,6 +14,7 @@ import CheckoutPage from "./pages/CheckoutPage";
 import ServiceDetailsPage from "./pages/ServiceDetailsPage";
 import ContactPage from "./pages/ContactPage";
 import OrderSuccess from "./pages/OrderSuccess";
+import ProductVariantsPage from "./pages/ProductVariantsPage";
 
 function AppContent() {
   return (
@@ -23,6 +24,7 @@ function AppContent() {
         <Route path="/" element={<HomePage />} />
         <Route path="/services" element={<ServicesPage />} />
         <Route path="/product/:id" element={<ProductDetailsPage />} />
+        <Route path="/product-variants/:productId" element={<ProductVariantsPage />} />
         <Route path="/custom-design" element={<CustomDesignPage />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />

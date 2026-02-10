@@ -1,13 +1,17 @@
-import React, { useState, useRef, useContext } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useRef, useContext, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { CartContext } from "../context/CartContext";
 import { useNotification } from "../context/NotificationContext";
 
 const CustomDesignPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { addToCart } = useContext(CartContext);
   const { showNotification } = useNotification();
   const canvasRef = useRef(null);
+  
+  // Get product from navigation state
+  const product = location.state?.product || null;
   
   const [designData, setDesignData] = useState({
     text: "Your Text Here",
@@ -19,7 +23,14 @@ const CustomDesignPage = () => {
   });
   
   const [uploadedImage, setUploadedImage] = useState(null);
-  const [price, setPrice] = useState(499);
+  const [price, setPrice] = useState(product?.price || 499);
+  
+  // Set product image as background when component mounts
+  useEffect(() => {
+    if (product?.image) {
+      setUploadedImage(product.image);
+    }
+  }, [product]);
 
   const handleTextChange = (e) => {
     setDesignData({ ...designData, text: e.target.value });
@@ -90,28 +101,48 @@ const CustomDesignPage = () => {
       ctx.fillStyle = designData.fontColor;
       ctx.font = `${designData.fontSize}px ${designData.fontFamily}`;
       ctx.textAlign = designData.textAlign;
+      ctx.textBaseline = 'middle';
       
       // Calculate text position based on alignment
       const x = designData.textAlign === 'center' ? canvas.width / 2 :
                 designData.textAlign === 'right' ? canvas.width - 20 : 20;
       
-      // Draw text with word wrap
+      // Draw text with word wrap - CENTERED VERTICALLY
       const lineHeight = designData.fontSize * 1.2;
       const lines = designData.text.split('\n');
       
+      // Calculate total text block height to center it vertically
+      const totalTextHeight = lines.length * lineHeight;
+      const startY = (canvas.height - totalTextHeight) / 2 + (lineHeight / 2);
+      
+      // Add text shadow for better visibility on images
+      if (uploadedImage) {
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+        ctx.shadowBlur = 4;
+        ctx.shadowOffsetX = 2;
+        ctx.shadowOffsetY = 2;
+      }
+      
       lines.forEach((line, i) => {
-        ctx.fillText(line, x, 50 + (i * lineHeight));
+        ctx.fillText(line, x, startY + (i * lineHeight));
       });
+      
+      // Reset shadow
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
       
       // Convert canvas to data URL
       const imageDataUrl = canvas.toDataURL('image/png');
       
       const customDesign = {
         id: `custom-${Date.now()}`,
-        name: "Custom Design",
-        price: price, // Use the selected price
+        name: product ? `Custom ${product.name}` : "Custom Design",
+        price: price,
         image: imageDataUrl,
         customData: designData,
+        originalProduct: product || null,
       };
 
       addToCart(customDesign);
@@ -138,9 +169,17 @@ const CustomDesignPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl font-bold text-center text-indigo-700 mb-8">
-          Create Your Custom Design
-        </h1>
+        {/* Header with product info */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-indigo-700 mb-2">
+            {product ? `Customize: ${product.name}` : 'Create Your Custom Design'}
+          </h1>
+          {product && (
+            <p className="text-gray-600">
+              {product.parentProduct && `${product.parentProduct} - `}{product.description}
+            </p>
+          )}
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Design Preview */}
@@ -151,7 +190,7 @@ const CustomDesignPage = () => {
                 ref={canvasRef}
                 className="w-full h-full flex items-center justify-center relative"
                 style={{
-                  backgroundColor: designData.backgroundColor,
+                  backgroundColor: uploadedImage ? 'transparent' : designData.backgroundColor,
                   padding: '20px',
                   wordBreak: 'break-word',
                 }}
@@ -159,12 +198,16 @@ const CustomDesignPage = () => {
                 {uploadedImage && (
                   <img
                     src={uploadedImage}
-                    alt="Uploaded background"
-                    className="absolute inset-0 w-full h-full object-cover opacity-30"
+                    alt="Design background"
+                    className="absolute inset-0 w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = "https://placehold.co/600x400/e2e8f0/475569?text=Design+Template";
+                    }}
                   />
                 )}
                 <div
-                  className="z-10"
+                  className="z-10 text-shadow-lg"
                   style={{
                     fontSize: `${designData.fontSize}px`,
                     color: designData.fontColor,
@@ -173,6 +216,7 @@ const CustomDesignPage = () => {
                     maxWidth: '100%',
                     lineHeight: 1.2,
                     whiteSpace: 'pre-line',
+                    textShadow: uploadedImage ? '2px 2px 4px rgba(0,0,0,0.5)' : 'none',
                   }}
                 >
                   {designData.text}
@@ -303,7 +347,7 @@ const CustomDesignPage = () => {
               {/* Background Color */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Background Color
+                  Background Color {uploadedImage && <span className="text-gray-400">(hidden when image is set)</span>}
                 </label>
                 <div className="flex items-center gap-4">
                   <input
@@ -311,6 +355,7 @@ const CustomDesignPage = () => {
                     value={designData.backgroundColor}
                     onChange={handleBackgroundColorChange}
                     className="w-16 h-10 rounded cursor-pointer"
+                    disabled={!!uploadedImage}
                   />
                   <span className="text-sm text-gray-600">{designData.backgroundColor}</span>
                 </div>
@@ -319,14 +364,27 @@ const CustomDesignPage = () => {
               {/* Image Upload */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Upload Background Image
+                  {uploadedImage ? 'Change Background Image' : 'Upload Background Image'}
                 </label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                />
+                <div className="space-y-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  />
+                  {uploadedImage && (
+                    <button
+                      onClick={() => setUploadedImage(null)}
+                      className="text-sm text-red-600 hover:text-red-800 flex items-center gap-1"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      Remove Background Image
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Price Selector */}
